@@ -6,10 +6,10 @@ const uploadRoutes = require("./routes/upload");
 
 const app = express();
 
-const PORT = 5000;
+const PORT = Number(process.env.PORT) || 5000;
 
 // Middleware
-app.use(cors());
+app.use(cors({ origin: process.env.FRONTEND_ORIGIN || "http://localhost:5173" }));
 app.use(express.json());
 
 // Routes
