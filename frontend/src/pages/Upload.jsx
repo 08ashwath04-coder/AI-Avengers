@@ -10,10 +10,33 @@ export default function Upload({ setPage }) {
   ]);
   const addFiles = e => setFiles(p => [...p, ...Array.from(e.target.files).map(f => ({name:f.name,meta:`Added just now • ${(f.size/1024/1024).toFixed(1)} MB`,progress:100}))]);
 
+  const uploadFiles = async (event) => {
+    const selected = Array.from(event.target.files || []);
+    for (const file of selected) {
+      const id = `${file.name}-${Date.now()}`;
+      setFiles((items) => [...items, { id, name: file.name, meta: "Uploading...", progress: 45, processing: true }]);
+      try {
+        const body = new FormData();
+        body.append("file", file);
+        const response = await fetch("/api/upload", { method: "POST", body });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Upload failed");
+        setFiles((items) => items.map((item) => item.id === id ? {
+          ...item, meta: `Uploaded just now - ${(file.size / 1024 / 1024).toFixed(1)} MB`, progress: 100, processing: false
+        } : item));
+      } catch (error) {
+        setFiles((items) => items.map((item) => item.id === id ? {
+          ...item, meta: error.message, progress: 0, processing: false
+        } : item));
+      }
+    }
+    event.target.value = "";
+  };
+
   return <div className="page upload-page">
     <div className="page-title"><h1>Upload Documents</h1><p>Enhance the AI's knowledge base by providing new context files.</p></div>
     <section className="drop-zone" onClick={() => input.current?.click()}>
-      <input ref={input} type="file" hidden multiple accept=".pdf,.ppt,.pptx,.doc,.docx,.txt" onChange={addFiles}/>
+      <input ref={input} type="file" hidden multiple accept=".pdf,.docx,.txt" onChange={uploadFiles}/>
       <div className="upload-round"><CloudUpload size={38}/></div>
       <h3>Tap or drag files here</h3>
       <p>Supports PDF, PPT, DOCX, TXT up to 50MB</p>
