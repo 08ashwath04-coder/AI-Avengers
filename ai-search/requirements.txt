@@ -1,0 +1,9 @@
+google-genai
+sentence-transformers
+faiss-cpu; python_version < "3.13"
+numpy
+python-dotenv
+fastapi
+uvicorn
+pydantic
+
